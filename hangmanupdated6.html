@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman - Vokabeltrainer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        #hangman {
+            font-size: 2em;
+            margin: 20px 0;
+        }
+        #letters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px;
+            font-size: 1em;
+            margin: 5px;
+            border: 2px solid #2196F3;
+            border-radius: 5px;
+            background: #2196F3;
+            color: white;
+            cursor: pointer;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #message {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+        #category {
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        #gallow {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            background: url('gallow0.png') center/contain no-repeat;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hangman - Vokabeltrainer</h1>
+    <div id="category">Kategorie: <span id="currentCategory">-</span></div>
+    <div id="gallow"></div>
+    <div id="hangman">_ _ _ _ _</div>
+    <div id="message"></div>
+    <div id="letters"></div>
+    <div>
+        <label for="unitSelect">Wähle eine Unit:</label>
+        <select id="unitSelect" onchange="setCategory()">
+            <option value="">-- Bitte wählen --</option>
+            <option value="Unit 2">Unit 2</option>
+            <option value="Unit 3">Unit 3</option>
+            <option value="Unit 4">Unit 4</option>
+        </select>
+    </div>
+    <button onclick="startGame()">Neues Spiel</button>
+
+    <script>
+        const vocabLists = {
+            "Units": {
+                "Unit 2": [
+                    { "word": "gate", "translation": "Tor" },
+                    { "word": "wood", "translation": "Wald" },
+                    { "word": "pub", "translation": "Kneipe" },
+                    { "word": "joke", "translation": "scherzen" },
+                    { "word": "business", "translation": "Geschäft" },
+                    { "word": "van", "translation": "Transporter" },
+                    { "word": "save", "translation": "retten" },
+                    { "word": "brave", "translation": "mutig" },
+                    { "word": "calm", "translation": "ruhig" },
+                    { "word": "deep", "translation": "tief" },
+                    { "word": "heavy", "translation": "schwer" },
+                    { "word": "accident", "translation": "Unfall" },
+                    { "word": "daughter", "translation": "Tochter" },
+                    { "word": "farmer", "translation": "Bauer" },
+                    { "word": "message", "translation": "Nachricht" },
+                    { "word": "smile", "translation": "lächeln" },
+                    { "word": "bush", "translation": "Busch" },
+                    { "word": "suddenly", "translation": "plötzlich" },
+                    { "word": "nose", "translation": "Nase" },
+                    { "word": "fox", "translation": "Fuchs" },
+                    { "word": "mouth", "translation": "Mund" },
+                    { "word": "quiet", "translation": "ruhig" },
+                    { "word": "park", "translation": "parken" },
+                    { "word": "article", "translation": "Artikel" },
+                    { "word": "horse", "translation": "Pferd" },
+                    { "word": "everywhere", "translation": "überall" },
+                    { "word": "usually", "translation": "meistens" },
+                    { "word": "ideal", "translation": "ideal" },
+                    { "word": "uncle", "translation": "Onkel" },
+                    { "word": "little", "translation": "klein" },
+                    { "word": "grandad", "translation": "Opa" }
+                ],
+                "Unit 3": [
+                    { "word": "China", "translation": "China" },
+                    { "word": "ship", "translation": "Schiff" },
+                    { "word": "Europe", "translation": "Europa" },
+                    { "word": "America", "translation": "Amerika" },
+                    { "word": "Australia", "translation": "Australien" },
+                    { "word": "bicycle", "translation": "Fahrrad" },
+                    { "word": "possible", "translation": "möglich" },
+                    { "word": "son", "translation": "Sohn" },
+                    { "word": "against", "translation": "gegen" },
+                    { "word": "less", "translation": "weniger" },
+                    { "word": "energy", "translation": "Energie" },
+                    { "word": "active", "translation": "aktiv" },
+                    { "word": "term", "translation": "Trimester" },
+                    { "word": "serious", "translation": "ernst" },
+                    { "word": "competition", "translation": "Wettbewerb" },
+                    { "word": "balloon", "translation": "Ballon" },
+                    { "word": "plant", "translation": "Pflanze" },
+                    { "word": "euro (€)", "translation": "Euro" },
+                    { "word": "flour", "translation": "Mehl" },
+                    { "word": "egg", "translation": "Ei" },
+                    { "word": "impressed", "translation": "beeindruckt" },
+                    { "word": "grandfather", "translation": "Großvater" },
+                    { "word": "negative", "translation": "negativ" },
+                    { "word": "enough", "translation": "genug" },
+                    { "word": "fantastic", "translation": "fantastisch" },
+                    { "word": "useful", "translation": "nützlich" },
+                    { "word": "task", "translation": "Aufgabe" },
+                    { "word": "opinion", "translation": "Meinung" },
+                    { "word": "comment", "translation": "Kommentar" },
+                    { "word": "boxing", "translation": "Boxen" },
+                    { "word": "Olympic", "translation": "olympisch" },
+                    { "word": "strong", "translation": "stark" },
+                    { "word": "ready", "translation": "bereit" },
+                    { "word": "message", "translation": "Botschaft" }
+                ],
+                "Unit 4": [
+                    { "word": "Scotland", "translation": "Schottland" },
+                    { "word": "castle", "translation": "Burg" },
+                    { "word": "grey", "translation": "grau" },
+                    { "word": "sky", "translation": "Himmel" },
+                    { "word": "modern", "translation": "modern" },
+                    { "word": "parliament", "translation": "Parlament" },
+                    { "word": "language", "translation": "Sprache" },
+                    { "word": "month", "translation": "Monat" },
+                    { "word": "beautiful", "translation": "schön" },
+                    { "word": "exhibition", "translation": "Ausstellung" },
+                    { "word": "guest", "translation": "Gast" },
+                    { "word": "twin room", "translation": "Zweibettzimmer" },
+                    { "word": "single room", "translation": "Einzelzimmer" },
+                    { "word": "kettle", "translation": "Wasserkocher" },
+                    { "word": "dry", "translation": "trocken" },
+                    { "word": "coat", "translation": "Mantel" },
+                    { "word": "Canadian", "translation": "Kanadisch" },
+                    { "word": "book", "translation": "buchen" },
+                    { "word": "confirm", "translation": "bestätigen" },
+                    { "word": "reservation", "translation": "Reservierung" },
+                    { "word": "directions", "translation": "Wegbeschreibungen" },
+                    { "word": "just", "translation": "einfach" },
+                    { "word": "sock", "translation": "Socke" },
+                    { "word": "bagpipes", "translation": "Dudelsack" },
+                    { "word": "ghost", "translation": "Gespenst" },
+                    { "word": "exist", "translation": "existieren" },
+                    { "word": "down", "translation": "hinunter" },
+                    { "word": "wave", "translation": "winken" },
+                    { "word": "land", "translation": "landen" },
+                    { "word": "hire", "translation": "mieten" },
+                    { "word": "finger", "translation": "Finger" },
+                    { "word": "ruin", "translation": "Ruine" },
+                    { "word": "car park", "translation": "Parkplatz" },
+                    { "word": "narrow", "translation": "eng" },
+                    { "word": "accent", "translation": "Akzent" },
+                    { "word": "pride", "translation": "Stolz" },
+                    { "word": "born", "translation": "geboren" },
+                    { "word": "region", "translation": "Region" },
+                    { "word": "salt", "translation": "Salz" },
+                    { "word": "sugar", "translation": "Zucker" }
+                ]
+            }
+        };
+
+        let currentCategory = "";
+        let currentWord = "";
+        let guessedWord = [];
+        let wrongGuesses = 0;
+        const maxGuesses = 6;
+
+        function setCategory() {
+            const select = document.getElementById("unitSelect");
+            currentCategory = select.value;
+            document.getElementById("currentCategory").textContent = currentCategory || "-";
+        }
+
+        function startGame() {
+            if (!currentCategory) {
+                alert("Bitte wähle eine Unit aus!");
+                return;
+            }
+
+            const words = vocabLists.Units[currentCategory];
+            if (!words || words.length === 0) {
+                alert("Keine Wörter in dieser Kategorie verfügbar!");
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * words.length);
+            const selectedWord = words[randomIndex];
+
+            if (!selectedWord || !selectedWord.word) {
+                alert("Ungültiges Wort in der Kategorie!");
+                return;
+            }
+
+            currentWord = selectedWord.word.toUpperCase();
+            guessedWord = currentWord.split("").map(char => {
+                return char === " " || char === "-" ? char : "_";
+            });
+
+            wrongGuesses = 0;
+            document.getElementById("hangman").textContent = guessedWord.join(" ");
+            document.getElementById("message").textContent = `Übersetzung: ${selectedWord.translation}`;
+            updateGallowImage();
+            generateLetterButtons();
+        }
+
+        function generateLetterButtons() {
+            const lettersDiv = document.getElementById("letters");
+            lettersDiv.innerHTML = "";
+
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ -";
+            for (const letter of alphabet) {
+                const button = document.createElement("button");
+                button.textContent = letter;
+                button.onclick = () => guessLetter(letter);
+                lettersDiv.appendChild(button);
+            }
+        }
+
+        function guessLetter(letter) {
+            let correctGuess = false;
+
+            for (let i = 0; i < currentWord.length; i++) {
+                if (currentWord[i] === letter) {
+                    guessedWord[i] = letter;
+                    correctGuess = true;
+                }
+            }
+
+            document.getElementById("hangman").textContent = guessedWord.join(" ");
+
+            if (!correctGuess) {
+                wrongGuesses++;
+                updateGallowImage();
+                if (wrongGuesses >= maxGuesses) {
+                    endGame(false);
+                }
+            } else if (!guessedWord.includes("_")) {
+                endGame(true);
+            }
+
+            disableButton(letter);
+        }
+
+        function disableButton(letter) {
+            const buttons = document.getElementById("letters").querySelectorAll("button");
+            buttons.forEach(btn => {
+                if (btn.textContent === letter) {
+                    btn.disabled = true;
+                }
+            });
+        }
+
+        function updateGallowImage() {
+            const gallowDiv = document.getElementById("gallow");
+            gallowDiv.style.backgroundImage = `url('gallow${wrongGuesses}.png')`;
+        }
+
+        function endGame(won) {
+            const message = document.getElementById("message");
+            const lettersDiv = document.getElementById("letters");
+
+            if (won) {
+                message.textContent = `🎉 Glückwunsch! Das Wort war: ${currentWord}`;
+            } else {
+                message.textContent = `❌ Verloren! Das Wort war: ${currentWord}`;
+            }
+
+            lettersDiv.innerHTML = "";
+        }
+    </script>
+</body>
+</html>

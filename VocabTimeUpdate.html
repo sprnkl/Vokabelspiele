@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vokabel-Zeitspiel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+        #game {
+            margin-top: 20px;
+        }
+        button, input {
+            padding: 10px;
+            margin: 5px;
+            border: 2px solid #2196F3;
+            border-radius: 5px;
+            font-size: 1em;
+            background: #2196F3;
+            color: white;
+            cursor: pointer;
+        }
+        input {
+            border-color: #ccc;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #timer {
+            font-size: 2em;
+            margin: 20px 0;
+        }
+        #vocabManager {
+            margin: 20px 0;
+            text-align: left;
+        }
+        #vocabList {
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vokabel-Zeitspiel</h1>
+
+    <div id="vocabManager">
+        <h2>Vokabelliste verwalten</h2>
+        <input type="text" id="listName" placeholder="Listenname">
+        <input type="text" id="inputEN" placeholder="Englisches Wort">
+        <input type="text" id="inputDE" placeholder="Deutsche Übersetzung">
+        <button onclick="addWord()">➕ Vokabel hinzufügen</button>
+        <button onclick="saveList()">💾 Liste speichern</button>
+        <h3>Gespeicherte Listen:</h3>
+        <div id="savedLists"></div>
+        <button onclick="startGame()" id="startGameButton" disabled>🎮 Spiel starten</button>
+    </div>
+
+    <div id="game" class="hidden">
+        <h2>Spiel</h2>
+        <div id="timer">⏱️ Zeit: <span id="timeValue">30</span> Sekunden</div>
+        <div id="question"></div>
+        <input type="text" id="answer" placeholder="Übersetzung eingeben">
+        <button onclick="submitAnswer()">Antwort überprüfen</button>
+        <div id="score">Punkte: <span id="scoreValue">0</span></div>
+        <button onclick="goToMenu()">⬅️ Zurück zum Hauptmenü</button>
+    </div>
+
+    <script>
+        // Initialisiere das vocabLists-Objekt mit den vorgegebenen Listen
+        let vocabLists = JSON.parse(localStorage.getItem('vocabLists')) || {
+            "Unit 2": [
+                { "word": "GATE", "translation": "Tor" },
+                { "word": "WOOD", "translation": "Wald" },
+                { "word": "PUB", "translation": "Kneipe" },
+                { "word": "JOKE", "translation": "scherzen" },
+                { "word": "BUSINESS", "translation": "Geschäft" },
+                { "word": "VAN", "translation": "Transporter" },
+                { "word": "SAVE", "translation": "retten" },
+                { "word": "BRAVE", "translation": "mutig" },
+                { "word": "CALM", "translation": "ruhig" },
+                { "word": "DEEP", "translation": "tief" },
+                { "word": "HEAVY", "translation": "schwer" },
+                { "word": "ACCIDENT", "translation": "Unfall" },
+                { "word": "DAUGHTER", "translation": "Tochter" },
+                { "word": "FARMER", "translation": "Bauer" },
+                { "word": "MESSAGE", "translation": "Nachricht" },
+                { "word": "SMILE", "translation": "lächeln" },
+                { "word": "BUSH", "translation": "Busch" },
+                { "word": "SUDDENLY", "translation": "plötzlich" },
+                { "word": "NOSE", "translation": "Nase" },
+                { "word": "FOX", "translation": "Fuchs" },
+                { "word": "MOUTH", "translation": "Mund" },
+                { "word": "QUIET", "translation": "ruhig" },
+                { "word": "PARK", "translation": "parken" },
+                { "word": "ARTICLE", "translation": "Artikel" },
+                { "word": "HORSE", "translation": "Pferd" },
+                { "word": "EVERYWHERE", "translation": "überall" },
+                { "word": "USUALLY", "translation": "meistens" },
+                { "word": "IDEAL", "translation": "ideal" },
+                { "word": "UNCLE", "translation": "Onkel" },
+                { "word": "LITTLE", "translation": "klein" },
+                { "word": "GRANDAD", "translation": "Opa" }
+            ],
+            "Unit 3": [
+                { "word": "CHINA", "translation": "China" },
+                { "word": "SHIP", "translation": "Schiff" },
+                { "word": "EUROPE", "translation": "Europa" },
+                { "word": "AMERICA", "translation": "Amerika" },
+                { "word": "AUSTRALIA", "translation": "Australien" },
+                { "word": "BICYCLE", "translation": "Fahrrad" },
+                { "word": "POSSIBLE", "translation": "möglich" },
+                { "word": "SON", "translation": "Sohn" },
+                { "word": "AGAINST", "translation": "gegen" },
+                { "word": "LESS", "translation": "weniger" },
+                { "word": "ENERGY", "translation": "Energie" },
+                { "word": "ACTIVE", "translation": "aktiv" },
+                { "word": "TERM", "translation": "Trimester" },
+                { "word": "SERIOUS", "translation": "ernst" },
+                { "word": "COMPETITION", "translation": "Wettbewerb" },
+                { "word": "BALLOON", "translation": "Ballon" },
+                { "word": "PLANT", "translation": "Pflanze" },
+                { "word": "EURO (€)", "translation": "Euro" },
+                { "word": "FLOUR", "translation": "Mehl" },
+                { "word": "EGG", "translation": "Ei" },
+                { "word": "IMPRESSED", "translation": "beeindruckt" },
+                { "word": "GRANDFATHER", "translation": "Großvater" },
+                { "word": "NEGATIVE", "translation": "negativ" },
+                { "word": "ENOUGH", "translation": "genug" },
+                { "word": "FANTASTIC", "translation": "fantastisch" },
+                { "word": "USEFUL", "translation": "nützlich" },
+                { "word": "TASK", "translation": "Aufgabe" },
+                { "word": "OPINION", "translation": "Meinung" },
+                { "word": "COMMENT", "translation": "Kommentar" },
+                { "word": "BOXING", "translation": "Boxen" },
+                { "word": "OLYMPIC", "translation": "olympisch" },
+                { "word": "STRONG", "translation": "stark" },
+                { "word": "READY", "translation": "bereit" },
+                { "word": "MESSAGE", "translation": "Botschaft" }
+            ],
+            "Unit 4": [
+                { "word": "SCOTLAND", "translation": "Schottland" },
+                { "word": "CASTLE", "translation": "Burg" },
+                { "word": "GREY", "translation": "grau" },
+                { "word": "SKY", "translation": "Himmel" },
+                { "word": "MODERN", "translation": "modern" },
+                { "word": "PARLIAMENT", "translation": "Parlament" },
+                { "word": "LANGUAGE", "translation": "Sprache" },
+                { "word": "MONTH", "translation": "Monat" },
+                { "word": "BEAUTIFUL", "translation": "schön" },
+                { "word": "EXHIBITION", "translation": "Ausstellung" },
+                { "word": "GUEST", "translation": "Gast" },
+                { "word": "TWIN ROOM", "translation": "Zweibettzimmer" },
+                { "word": "SINGLE ROOM", "translation": "Einzelzimmer" },
+                { "word": "KETTLE", "translation": "Wasserkocher" },
+                { "word": "DRY", "translation": "trocken" },
+                { "word": "COAT", "translation": "Mantel" },
+                { "word": "CANADIAN", "translation": "Kanadisch" },
+                { "word": "BOOK", "translation": "buchen" },
+                { "word": "CONFIRM", "translation": "bestätigen" },
+                { "word": "RESERVATION", "translation": "Reservierung" },
+                { "word": "DIRECTIONS", "translation": "Wegbeschreibungen" },
+                { "word": "JUST", "translation": "einfach" },
+                { "word": "SOCK", "translation": "Socke" },
+                { "word": "BAGPIPES", "translation": "Dudelsack" },
+                { "word": "GHOST", "translation": "Gespenst" },
+                { "word": "EXIST", "translation": "existieren" },
+                { "word": "DOWN", "translation": "hinunter" },
+                { "word": "WAVE", "translation": "winken" },
+                { "word": "LAND", "translation": "landen" },
+                { "word": "HIRE", "translation": "mieten" },
+                { "word": "FINGER", "translation": "Finger" },
+                { "word": "RUIN", "translation": "Ruine" },
+                { "word": "CAR PARK", "translation": "Parkplatz" },
+                { "word": "NARROW", "translation": "eng" },
+                { "word": "ACCENT", "translation": "Akzent" },
+                { "word": "PRIDE", "translation": "Stolz" },
+                { "word": "BORN", "translation": "geboren" },
+                { "word": "REGION", "translation": "Region" },
+                { "word": "SALT", "translation": "Salz" },
+                { "word": "SUGAR", "translation": "Zucker" }
+            ]
+        };
+
+        let currentListName = '';
+        let remainingWords = [];
+        let currentWord = "";
+        let currentTranslation = "";
+        let timeLeft = 30;
+        let score = 0;
+        let timerId = null;
+        let totalTime = 0;
+
+        function updateSavedLists() {
+            const savedListsDiv = document.getElementById('savedLists');
+            savedListsDiv.innerHTML = '';
+
+            Object.keys(vocabLists).forEach((listName) => {
+                const listButton = document.createElement('button');
+                listButton.textContent = listName;
+                listButton.onclick = () => selectList(listName);
+                savedListsDiv.appendChild(listButton);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '🗑️';
+                deleteButton.onclick = () => deleteList(listName);
+                deleteButton.style.marginLeft = '5px';
+                deleteButton.style.background = '#FF5722';
+                savedListsDiv.appendChild(deleteButton);
+            });
+        }
+
+        function selectList(listName) {
+            currentListName = listName;
+            document.getElementById('startGameButton').disabled = false;
+        }
+
+        function deleteList(listName) {
+            if (vocabLists[listName]) {
+                if (confirm(`Möchtest du die Liste "${listName}" wirklich löschen?`)) {
+                    delete vocabLists[listName];
+                    localStorage.setItem('vocabLists', JSON.stringify(vocabLists));
+                    updateSavedLists();
+                    if (currentListName === listName) {
+                        currentListName = '';
+                        document.getElementById('startGameButton').disabled = true;
+                    }
+                }
+            } else {
+                alert('Die Liste existiert nicht!');
+            }
+        }
+
+        function addWord() {
+            const en = document.getElementById('inputEN').value.trim();
+            const de = document.getElementById('inputDE').value.trim();
+            const listNameInput = document.getElementById('listName').value.trim();
+
+            if (!listNameInput) {
+                alert('Bitte geben Sie einen Listenname ein!');
+                return;
+            }
+
+            if (!vocabLists[listNameInput]) {
+                vocabLists[listNameInput] = [];
+            }
+
+            currentListName = listNameInput;
+
+            if (en && de) {
+                const isDuplicate = vocabLists[listNameInput].some(vocab => vocab.word === en.toUpperCase() && vocab.translation === de);
+                if (!isDuplicate) {
+                    vocabLists[listNameInput].push({ word: en.toUpperCase(), translation: de });
+                    document.getElementById('inputEN').value = '';
+                    document.getElementById('inputDE').value = '';
+                    updateSavedLists();
+                    document.getElementById('startGameButton').disabled = false;
+                } else {
+                    alert('Diese Vokabel existiert bereits in der Liste!');
+                }
+            } else {
+                alert('Bitte beide Felder ausfüllen!');
+            }
+        }
+
+        function saveList() {
+            if (!currentListName || !vocabLists[currentListName] || vocabLists[currentListName].length === 0) {
+                alert('Keine Liste zum Speichern vorhanden!');
+                return;
+            }
+            localStorage.setItem('vocabLists', JSON.stringify(vocabLists));
+            updateSavedLists();
+        }
+
+        function startGame() {
+            if (!currentListName || !vocabLists[currentListName] || vocabLists[currentListName].length === 0) {
+                alert('Bitte wählen Sie eine Liste mit Vokabeln aus!');
+                return;
+            }
+
+            document.getElementById('vocabManager').classList.add('hidden');
+            document.getElementById('game').classList.remove('hidden');
+
+            remainingWords = [...vocabLists[currentListName]];
+            timeLeft = 30;
+            score = 0;
+            totalTime = 0;
+
+            document.getElementById('timeValue').textContent = timeLeft;
+            document.getElementById('scoreValue').textContent = score;
+
+            if (timerId) clearInterval(timerId);
+            timerId = setInterval(updateTimer, 1000);
+
+            nextQuestion();
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            totalTime++;
+            document.getElementById('timeValue').textContent = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerId);
+                endGame();
+            }
+        }
+
+        function nextQuestion() {
+            if (remainingWords.length === 0) {
+                clearInterval(timerId);
+                endGame();
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * remainingWords.length);
+            const selectedVocab = remainingWords.splice(randomIndex, 1)[0];
+
+            currentWord = selectedVocab.word;
+            currentTranslation = selectedVocab.translation;
+
+            document.getElementById('question').textContent = `Übersetze: ${currentTranslation}`;
+            document.getElementById('answer').value = '';
+        }
+
+        function submitAnswer() {
+            const userAnswer = document.getElementById('answer').value.trim().toUpperCase(); // Normalisiere die Eingabe
+            if (userAnswer === currentWord) { // Vergleiche die normalisierte Eingabe mit dem gespeicherten Wort
+                score++;
+                document.getElementById('scoreValue').textContent = score;
+                timeLeft += 5; // Bonuszeit für richtige Antwort
+                nextQuestion();
+            } else {
+                alert(`Falsch! Die richtige Antwort war: ${currentWord}`);
+                nextQuestion();
+            }
+        }
+
+        function endGame() {
+            alert(`Spiel vorbei! Deine Punktzahl: ${score} \nGesamtzeit: ${totalTime} Sekunden`);
+            goToMenu();
+        }
+
+        function goToMenu() {
+            clearInterval(timerId);
+            document.getElementById('game').classList.add('hidden');
+            document.getElementById('vocabManager').classList.remove('hidden');
+        }
+
+        updateSavedLists();
+    </script>
+</body>
+</html>
