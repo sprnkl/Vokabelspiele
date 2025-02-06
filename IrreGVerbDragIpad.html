@@ -1,120 +1,281 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vokabelspiel</title>
-    <style>
-        /* Dein CSS-Stil hier */
-        .verb {
-            background-color: #ffdd57;
-            padding: 10px;
-            margin: 5px;
-            border-radius: 5px;
-            cursor: grab;
-            text-align: center;
-            width: 120px;
-        }
-        .drop-zone {
-            border: 2px dashed #aaa;
-            padding: 15px;
-            min-width: 150px;
-            text-align: center;
-        }
-        .dragging {
-            opacity: 0.5;
-        }
-        .hidden {
-            display: none;
-        }
-        .correct {
-            background-color: #4CAF50;
-            color: white;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vokabelspiel – Unregelmäßige Verben</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    /* Draggable Elemente */
+    .verb {
+      background-color: #ffdd57;
+      padding: 10px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: grab;
+      display: inline-block;
+      text-align: center;
+      width: auto;
+    }
+    .hidden {
+      display: none;
+    }
+    /* Drop-Zonen */
+    .drop-zone {
+      border: 2px dashed #aaa;
+      padding: 15px;
+      min-width: 120px;
+      text-align: center;
+      margin: 5px;
+    }
+    .correct {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+    }
+    /* Tabelle für die Zuordnung */
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px 15px;
+    }
+  </style>
 </head>
 <body>
-    <h1>Vokabelspiel: Drag & Drop</h1>
-    <div id="game" class="container">
-        <div class="verb" data-match="infinitive">be</div>
-        <div class="verb" data-match="pastSimple">was/were</div>
-        <div class="verb" data-match="pastParticiple">been</div>
-        <div class="verb" data-match="meaning">sein</div>
+  <h1>Vokabelspiel: Unregelmäßige Verben Drag & Drop</h1>
 
-        <div class="drop-zone" data-match="infinitive">Infinitive</div>
-        <div class="drop-zone" data-match="pastSimple">Past Simple</div>
-        <div class="drop-zone" data-match="pastParticiple">Past Participle</div>
-        <div class="drop-zone" data-match="meaning">Meaning</div>
-    </div>
+  <!-- Container für die draggable Wörter -->
+  <div id="draggables">
+    <h2>Wörter</h2>
+    <!-- Hier werden die Wörter dynamisch eingefügt -->
+  </div>
 
-    <script>
-        // JavaScript-Code mit Touch-Unterstützung
-        document.querySelectorAll('.verb').forEach((verb) => {
-            // Für Maus-Drag-&-Drop
-            verb.addEventListener('dragstart', (event) => {
-                event.dataTransfer.setData('text/plain', '');
-                verb.classList.add('dragging');
-            });
+  <!-- Container für die Drop-Zonen (Tabelle) -->
+  <div id="drop-zones">
+    <h2>Zuordnen</h2>
+    <!-- Hier wird die Tabelle dynamisch erstellt -->
+  </div>
 
-            verb.addEventListener('dragend', () => {
-                verb.classList.remove('dragging');
-            });
+  <script>
+    // Liste der unregelmäßigen Verben
+    const verbs = [
+      { infinitive: "be",         pastSimple: "was/were",   pastParticiple: "been",         meaning: "sein" },
+      { infinitive: "become",     pastSimple: "became",     pastParticiple: "become",       meaning: "werden" },
+      { infinitive: "begin",      pastSimple: "began",      pastParticiple: "begun",        meaning: "beginnen, anfangen" },
+      { infinitive: "bet",        pastSimple: "bet",        pastParticiple: "bet",          meaning: "wetten" },
+      { infinitive: "break",      pastSimple: "broke",      pastParticiple: "broken",       meaning: "brechen, zerbrechen" },
+      { infinitive: "bring",      pastSimple: "brought",    pastParticiple: "brought",      meaning: "bringen, mitbringen" },
+      { infinitive: "build",      pastSimple: "built",      pastParticiple: "built",        meaning: "bauen" },
+      { infinitive: "buy",        pastSimple: "bought",     pastParticiple: "bought",       meaning: "kaufen" },
+      { infinitive: "catch",      pastSimple: "caught",     pastParticiple: "caught",       meaning: "fangen, erwischen" },
+      { infinitive: "choose",     pastSimple: "chose",      pastParticiple: "chosen",       meaning: "(aus)wählen" },
+      { infinitive: "come",       pastSimple: "came",       pastParticiple: "come",         meaning: "kommen" },
+      { infinitive: "cost",       pastSimple: "cost",       pastParticiple: "cost",         meaning: "kosten" },
+      { infinitive: "creep",      pastSimple: "crept",      pastParticiple: "crept",        meaning: "schleichen, kriechen" },
+      { infinitive: "cut",        pastSimple: "cut",        pastParticiple: "cut",          meaning: "schneiden, (Rasen) mähen" },
+      { infinitive: "do",         pastSimple: "did",        pastParticiple: "done",         meaning: "tun, machen" },
+      { infinitive: "drink",      pastSimple: "drank",      pastParticiple: "drunk",        meaning: "trinken" },
+      { infinitive: "drive",      pastSimple: "drove",      pastParticiple: "driven",       meaning: "(mit dem Auto) fahren, (an)treiben" },
+      { infinitive: "eat",        pastSimple: "ate",        pastParticiple: "eaten",        meaning: "essen" },
+      { infinitive: "fall",       pastSimple: "fell",       pastParticiple: "fallen",       meaning: "fallen, hinfallen" },
+      { infinitive: "feed",       pastSimple: "fed",        pastParticiple: "fed",          meaning: "füttern" },
+      { infinitive: "feel",       pastSimple: "felt",       pastParticiple: "felt",         meaning: "fühlen; sich fühlen" },
+      { infinitive: "fight",      pastSimple: "fought",     pastParticiple: "fought",       meaning: "kämpfen, bekämpfen" },
+      { infinitive: "find",       pastSimple: "found",      pastParticiple: "found",        meaning: "finden" },
+      { infinitive: "fly",        pastSimple: "flew",       pastParticiple: "flown",        meaning: "fliegen" },
+      { infinitive: "forget",     pastSimple: "forgot",     pastParticiple: "forgotten",    meaning: "vergessen" },
+      { infinitive: "get",        pastSimple: "got",        pastParticiple: "got",          meaning: "bekommen, holen, werden, (hin)kommen" },
+      { infinitive: "give",       pastSimple: "gave",       pastParticiple: "given",        meaning: "geben" },
+      { infinitive: "go",         pastSimple: "went",       pastParticiple: "gone",         meaning: "gehen" },
+      { infinitive: "grow",       pastSimple: "grew",       pastParticiple: "grown",        meaning: "werden, wachsen" },
+      { infinitive: "have",       pastSimple: "had",        pastParticiple: "had",          meaning: "haben" },
+      { infinitive: "hear",       pastSimple: "heard",      pastParticiple: "heard",        meaning: "hören" },
+      { infinitive: "hit",        pastSimple: "hit",        pastParticiple: "hit",          meaning: "schlagen, treffen; prallen gegen" },
+      { infinitive: "hold",       pastSimple: "held",       pastParticiple: "held",         meaning: "halten" },
+      { infinitive: "hurt",       pastSimple: "hurt",       pastParticiple: "hurt",         meaning: "verletzen; wehtun" },
+      { infinitive: "keep",       pastSimple: "kept",       pastParticiple: "kept",         meaning: "(frei)halten, behalten" },
+      { infinitive: "know",       pastSimple: "knew",       pastParticiple: "known",        meaning: "wissen, kennen" },
+      { infinitive: "leave",      pastSimple: "left",       pastParticiple: "left",         meaning: "abfahren, weggehen; zurücklassen" },
+      { infinitive: "lie",        pastSimple: "lay",        pastParticiple: "lain",         meaning: "liegen" },
+      { infinitive: "lose",       pastSimple: "lost",       pastParticiple: "lost",         meaning: "verlieren" },
+      { infinitive: "make",       pastSimple: "made",       pastParticiple: "made",         meaning: "machen" },
+      { infinitive: "mean",       pastSimple: "meant",      pastParticiple: "meant",        meaning: "bedeuten, meinen; sagen wollen" },
+      { infinitive: "meet",       pastSimple: "met",        pastParticiple: "met",          meaning: "treffen; sich treffen; kennenlernen" },
+      { infinitive: "pay",        pastSimple: "paid",       pastParticiple: "paid",         meaning: "bezahlen" },
+      { infinitive: "put",        pastSimple: "put",        pastParticiple: "put",          meaning: "tun, legen, stellen" },
+      { infinitive: "read",       pastSimple: "read",       pastParticiple: "read",         meaning: "lesen" },
+      { infinitive: "ride",       pastSimple: "rode",       pastParticiple: "ridden",       meaning: "reiten, (Rad) fahren" },
+      { infinitive: "ring",       pastSimple: "rang",       pastParticiple: "rung",         meaning: "läuten, klingen; anrufen" },
+      { infinitive: "run",        pastSimple: "ran",        pastParticiple: "run",          meaning: "rennen, laufen" },
+      { infinitive: "say",        pastSimple: "said",       pastParticiple: "said",         meaning: "sagen" },
+      { infinitive: "see",        pastSimple: "saw",        pastParticiple: "seen",         meaning: "sehen" },
+      { infinitive: "sell",       pastSimple: "sold",       pastParticiple: "sold",         meaning: "verkaufen" },
+      { infinitive: "send",       pastSimple: "sent",       pastParticiple: "sent",         meaning: "schicken, senden" },
+      { infinitive: "shake",      pastSimple: "shook",      pastParticiple: "shaken",       meaning: "schütteln" },
+      { infinitive: "shoot",      pastSimple: "shot",       pastParticiple: "shot",         meaning: "erschießen, schießen (auf)" },
+      { infinitive: "show off",   pastSimple: "showed off", pastParticiple: "shown off",   meaning: "angeben (prahlen)" },
+      { infinitive: "sing",       pastSimple: "sang",       pastParticiple: "sung",         meaning: "singen" },
+      { infinitive: "sit",        pastSimple: "sat",        pastParticiple: "sat",          meaning: "sitzen" },
+      { infinitive: "sleep",      pastSimple: "slept",      pastParticiple: "slept",        meaning: "schlafen" },
+      { infinitive: "speak",      pastSimple: "spoke",      pastParticiple: "spoken",       meaning: "sprechen" },
+      { infinitive: "spend",      pastSimple: "spent",      pastParticiple: "spent",        meaning: "ausgeben (Geld); verbringen (Zeit)" },
+      { infinitive: "stand",      pastSimple: "stood",      pastParticiple: "stood",        meaning: "stehen; sich (hin)stellen" },
+      { infinitive: "steal",      pastSimple: "stole",      pastParticiple: "stolen",       meaning: "stehlen" },
+      { infinitive: "stink",      pastSimple: "stank",      pastParticiple: "stunk",        meaning: "stinken" },
+      { infinitive: "swim",       pastSimple: "swam",       pastParticiple: "swum",         meaning: "schwimmen" },
+      { infinitive: "take",       pastSimple: "took",       pastParticiple: "taken",        meaning: "nehmen; mitnehmen; dauern, (Zeit) brauchen" },
+      { infinitive: "tell",       pastSimple: "told",       pastParticiple: "told",         meaning: "erzählen, berichten" },
+      { infinitive: "teach",      pastSimple: "taught",     pastParticiple: "taught",       meaning: "unterrichten, lehren" },
+      { infinitive: "think",      pastSimple: "thought",    pastParticiple: "thought",      meaning: "denken" },
+      { infinitive: "throw",      pastSimple: "threw",      pastParticiple: "thrown",       meaning: "werfen" },
+      { infinitive: "understand", pastSimple: "understood", pastParticiple: "understood",   meaning: "verstehen" },
+      { infinitive: "wear",       pastSimple: "wore",       pastParticiple: "worn",         meaning: "tragen, anhaben (Kleidung)" },
+      { infinitive: "win",        pastSimple: "won",        pastParticiple: "won",          meaning: "gewinnen" },
+      { infinitive: "write",      pastSimple: "wrote",      pastParticiple: "written",      meaning: "schreiben" }
+    ];
 
-            // Für Touch-Drag-&-Drop
-            verb.addEventListener('touchstart', (event) => {
-                const touch = event.touches[0];
-                verb.classList.add('dragging');
-                verb.style.position = 'absolute';
-                verb.style.left = `${touch.pageX - verb.offsetWidth / 2}px`;
-                verb.style.top = `${touch.pageY - verb.offsetHeight / 2}px`;
-            });
+    // --- Erzeugen der draggable Elemente ---
+    // Wir sammeln alle Formen in einem Array
+    let draggablesArray = [];
+    verbs.forEach(verb => {
+      draggablesArray.push({ text: verb.infinitive,      verb: verb.infinitive, match: "infinitive" });
+      draggablesArray.push({ text: verb.pastSimple,      verb: verb.infinitive, match: "pastSimple" });
+      draggablesArray.push({ text: verb.pastParticiple,  verb: verb.infinitive, match: "pastParticiple" });
+      draggablesArray.push({ text: verb.meaning,         verb: verb.infinitive, match: "meaning" });
+    });
 
-            document.addEventListener('touchmove', (event) => {
-                const dragged = document.querySelector('.dragging');
-                if (!dragged) return;
+    // Funktion zum Mischen des Arrays (Fisher-Yates)
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+    shuffle(draggablesArray);
 
-                const touch = event.touches[0];
-                dragged.style.left = `${touch.pageX - dragged.offsetWidth / 2}px`;
-                dragged.style.top = `${touch.pageY - dragged.offsetHeight / 2}px`;
-            });
+    // Rendern der draggable Wörter
+    const draggablesContainer = document.getElementById('draggables');
+    draggablesArray.forEach(item => {
+      const div = document.createElement('div');
+      div.classList.add('verb');
+      div.setAttribute('draggable', 'true');
+      div.setAttribute('data-verb', item.verb);
+      div.setAttribute('data-match', item.match);
+      div.textContent = item.text;
+      draggablesContainer.appendChild(div);
+    });
 
-            document.addEventListener('touchend', () => {
-                const dragged = document.querySelector('.dragging');
-                if (dragged) {
-                    dragged.classList.remove('dragging');
-                    dragged.style.position = '';
-                    dragged.style.left = '';
-                    dragged.style.top = '';
-                }
-            });
-        });
+    // --- Erzeugen der Drop-Zonen in einer Tabelle ---
+    const dropZonesContainer = document.getElementById('drop-zones');
+    const table = document.createElement('table');
+    // Tabellenkopf
+    const headerRow = document.createElement('tr');
+    const headers = ["Infinitiv", "Past Simple", "Past Participle", "Bedeutung"];
+    headers.forEach(text => {
+      const th = document.createElement('th');
+      th.textContent = text;
+      headerRow.appendChild(th);
+    });
+    table.appendChild(headerRow);
 
-        document.querySelectorAll('.drop-zone').forEach((zone) => {
-            // Für Maus-Drag-&-Drop
-            zone.addEventListener('dragover', (event) => {
-                event.preventDefault();
-            });
+    // Für jedes Verb eine Zeile mit vier Drop-Zonen
+    verbs.forEach(verb => {
+      const tr = document.createElement('tr');
+      const columns = [
+        { match: "infinitive", label: "Infinitiv" },
+        { match: "pastSimple", label: "Past Simple" },
+        { match: "pastParticiple", label: "Past Participle" },
+        { match: "meaning", label: "Bedeutung" }
+      ];
+      columns.forEach(col => {
+        const td = document.createElement('td');
+        const dropDiv = document.createElement('div');
+        dropDiv.classList.add('drop-zone');
+        dropDiv.setAttribute('data-verb', verb.infinitive);
+        dropDiv.setAttribute('data-match', col.match);
+        dropDiv.textContent = col.label;
+        td.appendChild(dropDiv);
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+    dropZonesContainer.appendChild(table);
 
-            zone.addEventListener('drop', (event) => {
-                event.preventDefault();
-                const dragged = document.querySelector('.dragging');
-                if (dragged && dragged.dataset.match === zone.dataset.match) {
-                    zone.textContent = dragged.textContent;
-                    zone.classList.add('correct');
-                    dragged.classList.add('hidden');
-                }
-            });
+    // --- Drag & Drop Event-Handler ---
+    // Für draggable Elemente (Maus & Touch)
+    document.querySelectorAll('.verb').forEach(elem => {
+      // Maus-Events
+      elem.addEventListener('dragstart', event => {
+        event.dataTransfer.setData('text/plain', '');
+        elem.classList.add('dragging');
+      });
+      elem.addEventListener('dragend', () => {
+        elem.classList.remove('dragging');
+      });
+      // Touch-Events
+      elem.addEventListener('touchstart', event => {
+        const touch = event.touches[0];
+        elem.classList.add('dragging');
+        elem.style.position = 'absolute';
+        elem.style.left = `${touch.pageX - elem.offsetWidth / 2}px`;
+        elem.style.top = `${touch.pageY - elem.offsetHeight / 2}px`;
+      });
+      document.addEventListener('touchmove', event => {
+        const dragged = document.querySelector('.dragging');
+        if (!dragged) return;
+        const touch = event.touches[0];
+        dragged.style.left = `${touch.pageX - dragged.offsetWidth / 2}px`;
+        dragged.style.top = `${touch.pageY - dragged.offsetHeight / 2}px`;
+      });
+      document.addEventListener('touchend', () => {
+        const dragged = document.querySelector('.dragging');
+        if (dragged) {
+          dragged.classList.remove('dragging');
+          dragged.style.position = '';
+          dragged.style.left = '';
+          dragged.style.top = '';
+        }
+      });
+    });
 
-            // Für Touch-Drag-&-Drop
-            zone.addEventListener('touchend', () => {
-                const dragged = document.querySelector('.dragging');
-                if (dragged && dragged.dataset.match === zone.dataset.match) {
-                    zone.textContent = dragged.textContent;
-                    zone.classList.add('correct');
-                    dragged.classList.add('hidden');
-                }
-            });
-        });
-    </script>
+    // Für die Drop-Zonen (Maus & Touch)
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+      // Maus-Events
+      zone.addEventListener('dragover', event => {
+        event.preventDefault();
+      });
+      zone.addEventListener('drop', event => {
+        event.preventDefault();
+        const dragged = document.querySelector('.dragging');
+        if (dragged) {
+          if (dragged.dataset.verb === zone.dataset.verb && dragged.dataset.match === zone.dataset.match) {
+            zone.textContent = dragged.textContent;
+            zone.classList.add('correct');
+            dragged.classList.add('hidden');
+          }
+        }
+      });
+      // Touch-Event: Wenn der Finger über der Drop-Zone losgelassen wird
+      zone.addEventListener('touchend', () => {
+        const dragged = document.querySelector('.dragging');
+        if (dragged) {
+          if (dragged.dataset.verb === zone.dataset.verb && dragged.dataset.match === zone.dataset.match) {
+            zone.textContent = dragged.textContent;
+            zone.classList.add('correct');
+            dragged.classList.add('hidden');
+          }
+        }
+      });
+    });
+  </script>
 </body>
 </html>
