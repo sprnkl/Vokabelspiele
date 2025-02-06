@@ -34,6 +34,8 @@
       text-align: center;
       min-width: 80px;
       border: 1px solid #ccc;
+      /* Deaktiviert die native Touch-Geste (z. B. Scrollen) auf dem Element */
+      touch-action: none;
     }
     .hidden {
       display: none;
@@ -176,22 +178,12 @@
         dropDiv.textContent = cat.label;
         dropZonesContainer.appendChild(dropDiv);
 
-        // Drop-Zonen: Maus-Events
+        // Für Maus-Events an den Drop-Zonen
         dropDiv.addEventListener('dragover', event => {
           event.preventDefault();
         });
         dropDiv.addEventListener('drop', event => {
           event.preventDefault();
-          const dragged = document.querySelector('.dragging');
-          if (dragged && dragged.dataset.match === dropDiv.dataset.match) {
-            dropDiv.textContent = dragged.textContent;
-            dropDiv.classList.add('correct');
-            dragged.classList.add('hidden');
-            checkCompletion();
-          }
-        });
-        // Drop-Zone: Touch-Event
-        dropDiv.addEventListener('touchend', () => {
           const dragged = document.querySelector('.dragging');
           if (dragged && dragged.dataset.match === dropDiv.dataset.match) {
             dropDiv.textContent = dragged.textContent;
@@ -230,32 +222,48 @@
         div.addEventListener('dragend', () => {
           div.classList.remove('dragging');
         });
-        // Touch-Events
+        // Touch-Start: Markiere das Element als "dragging" und setze es absolut
         div.addEventListener('touchstart', event => {
           const touch = event.touches[0];
           div.classList.add('dragging');
           div.style.position = 'absolute';
           div.style.left = `${touch.pageX - div.offsetWidth / 2}px`;
-          div.style.top = `${touch.pageY - div.offsetHeight / 2}px`;
-        });
-        document.addEventListener('touchmove', event => {
-          const dragged = document.querySelector('.dragging');
-          if (!dragged) return;
-          const touch = event.touches[0];
-          dragged.style.left = `${touch.pageX - dragged.offsetWidth / 2}px`;
-          dragged.style.top = `${touch.pageY - dragged.offsetHeight / 2}px`;
-        });
-        document.addEventListener('touchend', () => {
-          const dragged = document.querySelector('.dragging');
-          if (dragged) {
-            dragged.classList.remove('dragging');
-            dragged.style.position = '';
-            dragged.style.left = '';
-            dragged.style.top = '';
-          }
+          div.style.top  = `${touch.pageY - div.offsetHeight / 2}px`;
+          // Verhindere, dass der Browser hier versucht zu scrollen
+          event.preventDefault();
         });
       });
     }
+
+    // Globaler Touch-Move-Listener (wird nur aktiv, wenn ein Element "dragging" ist)
+    document.addEventListener('touchmove', event => {
+      const dragged = document.querySelector('.dragging');
+      if (!dragged) return;
+      const touch = event.touches[0];
+      dragged.style.left = `${touch.pageX - dragged.offsetWidth / 2}px`;
+      dragged.style.top  = `${touch.pageY - dragged.offsetHeight / 2}px`;
+    });
+
+    // Globaler Touch-End-Listener: Ermittelt per document.elementFromPoint, ob der Drop erfolgt ist
+    document.addEventListener('touchend', event => {
+      const dragged = document.querySelector('.dragging');
+      if (!dragged) return;
+      const touch = event.changedTouches[0];
+      const dropElem = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (dropElem && dropElem.classList.contains('drop-zone')) {
+        if (dragged.dataset.match === dropElem.dataset.match) {
+          dropElem.textContent = dragged.textContent;
+          dropElem.classList.add('correct');
+          dragged.classList.add('hidden');
+          checkCompletion();
+        }
+      }
+      // Entferne die Dragging-Klasse und setze die Position zurück
+      dragged.classList.remove('dragging');
+      dragged.style.position = '';
+      dragged.style.left = '';
+      dragged.style.top = '';
+    });
 
     // Shuffle-Funktion (Fisher-Yates)
     function shuffle(array) {
