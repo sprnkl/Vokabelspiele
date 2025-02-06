@@ -250,35 +250,27 @@
     document.addEventListener('touchend', event => {
       const dragged = document.querySelector('.dragging');
       if (!dragged) return;
-      const touch = event.changedTouches[0];
-      
-      // Prüfe alle Drop-Zonen, ob der Touch-End-Punkt in einem von ihnen liegt
-      let dropElem = null;
-      const dropZones = document.querySelectorAll('.drop-zone');
-      dropZones.forEach(zone => {
-        const rect = zone.getBoundingClientRect();
-        if (
-          touch.clientX >= rect.left &&
-          touch.clientX <= rect.right &&
-          touch.clientY >= rect.top &&
-          touch.clientY <= rect.bottom
-        ) {
-          dropElem = zone;
+      // Kurzer Timeout, damit sich das DOM stabilisiert
+      setTimeout(() => {
+        const touch = event.changedTouches[0];
+        // Versuche, mithilfe von closest() die Drop-Zone zu ermitteln
+        let dropElem = null;
+        const elemAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (elemAtPoint) {
+          dropElem = elemAtPoint.closest('.drop-zone');
         }
-      });
-
-      if (dropElem && dragged.dataset.match === dropElem.dataset.match) {
-        dropElem.textContent = dragged.textContent;
-        dropElem.classList.add('correct');
-        dragged.classList.add('hidden');
-        checkCompletion();
-      }
-
-      // Entferne die "dragging"-Klasse und setze die Position zurück
-      dragged.classList.remove('dragging');
-      dragged.style.position = '';
-      dragged.style.left = '';
-      dragged.style.top = '';
+        if (dropElem && dragged.dataset.match === dropElem.dataset.match) {
+          dropElem.textContent = dragged.textContent;
+          dropElem.classList.add('correct');
+          dragged.classList.add('hidden');
+          checkCompletion();
+        }
+        // Rücksetzen
+        dragged.classList.remove('dragging');
+        dragged.style.position = '';
+        dragged.style.left = '';
+        dragged.style.top = '';
+      }, 50);
     });
 
     // Shuffle-Funktion (Fisher-Yates)
