@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vokabelspiel: Unregelmäßige Verben</title>
+  <title>Vokabelspiel: Unregelmäßige Verben (Pointer Events)</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -18,12 +18,11 @@
       font-weight: bold;
       margin-bottom: 20px;
     }
-    /* Container für Drop-Zonen und draggable Elemente */
     #drop-zones, #draggables {
       text-align: center;
       margin-bottom: 20px;
     }
-    /* Style für die draggable Wörter */
+    /* Style für draggable Elemente */
     .verb {
       background-color: #ffdd57;
       padding: 10px;
@@ -34,13 +33,14 @@
       text-align: center;
       min-width: 80px;
       border: 1px solid #ccc;
-      /* Verhindert natives Scrollen/Zoom bei Touch */
+      user-select: none;
+      /* Deaktiviert native Touch-Gesten */
       touch-action: none;
     }
     .hidden {
       display: none;
     }
-    /* Style für die Drop-Zonen */
+    /* Style für Drop-Zonen */
     .drop-zone {
       border: 2px dashed #aaa;
       padding: 15px;
@@ -63,7 +63,7 @@
   <div id="draggables"></div>
 
   <script>
-    // Array mit allen unregelmäßigen Verben
+    // Array aller unregelmäßigen Verben
     const verbs = [
       { infinitive: "be",         pastSimple: "was/were",    pastParticiple: "been",         meaning: "sein" },
       { infinitive: "become",     pastSimple: "became",      pastParticiple: "become",       meaning: "werden" },
@@ -139,13 +139,12 @@
       { infinitive: "win",        pastSimple: "won",         pastParticiple: "won",          meaning: "gewinnen" },
       { infinitive: "write",      pastSimple: "wrote",       pastParticiple: "written",      meaning: "schreiben" }
     ];
-
+    
     let currentVerbIndex = 0;
-
-    // Mische die Reihenfolge der Verben einmalig vor Spielstart
+    
+    // Mische die Reihenfolge der Verben vor Spielstart
     shuffle(verbs);
-
-    // Lädt ein Verb (alle seine Formen) in die Spieloberfläche
+    
     function loadVerb(index) {
       if (index >= verbs.length) {
         document.getElementById('progress').textContent = "Glückwunsch! Alle Verben wurden abgefragt.";
@@ -153,136 +152,110 @@
         document.getElementById('draggables').innerHTML = "";
         return;
       }
-
+      
       const currentVerb = verbs[index];
-
-      // Aktualisiere den Fortschritts-Text
       document.getElementById('progress').textContent = `Verb ${index + 1} von ${verbs.length}`;
-
-      // Leere die Container für Drop-Zonen und draggable Elemente
+      
       const dropZonesContainer = document.getElementById('drop-zones');
-      dropZonesContainer.innerHTML = "";
       const draggablesContainer = document.getElementById('draggables');
+      dropZonesContainer.innerHTML = "";
       draggablesContainer.innerHTML = "";
-
-      // Kategorien (Formen und Bedeutung) mit Beschriftung
+      
       const categories = [
         { key: "infinitive", label: "Infinitiv" },
         { key: "pastSimple", label: "Past Simple" },
         { key: "pastParticiple", label: "Past Participle" },
         { key: "meaning", label: "Bedeutung" }
       ];
-
-      // Erstelle die Drop-Zonen für das aktuelle Verb
+      
       categories.forEach(cat => {
         const dropDiv = document.createElement('div');
         dropDiv.classList.add('drop-zone');
         dropDiv.setAttribute('data-match', cat.key);
         dropDiv.textContent = cat.label;
         dropZonesContainer.appendChild(dropDiv);
-
-        // Für Maus-Events an den Drop-Zonen
-        dropDiv.addEventListener('dragover', event => {
-          event.preventDefault();
-        });
-        dropDiv.addEventListener('drop', event => {
-          event.preventDefault();
-          const dragged = document.querySelector('.dragging');
-          if (dragged && dragged.dataset.match === dropDiv.dataset.match) {
-            dropDiv.textContent = dragged.textContent;
-            dropDiv.classList.add('correct');
-            dragged.classList.add('hidden');
-            checkCompletion();
-          }
-        });
       });
-
-      // Erstelle die draggable Elemente (Wortteile) für das aktuelle Verb
+      
       const draggableItems = [
         { text: currentVerb.infinitive,     match: "infinitive" },
         { text: currentVerb.pastSimple,     match: "pastSimple" },
         { text: currentVerb.pastParticiple, match: "pastParticiple" },
         { text: currentVerb.meaning,        match: "meaning" }
       ];
-
-      // Mische die draggable Items zufällig
+      
       shuffle(draggableItems);
-
-      // Füge die Elemente in den Container ein und hänge die Event-Listener an
+      
       draggableItems.forEach(item => {
         const div = document.createElement('div');
         div.classList.add('verb');
-        div.setAttribute('draggable', 'true');
         div.setAttribute('data-match', item.match);
         div.textContent = item.text;
         draggablesContainer.appendChild(div);
-
-        // Maus-Events
-        div.addEventListener('dragstart', event => {
-          event.dataTransfer.setData('text/plain', '');
-          div.classList.add('dragging');
-        });
-        div.addEventListener('dragend', () => {
-          div.classList.remove('dragging');
-        });
-        // Touch-Start: Markiere das Element als "dragging" und setze es absolut
-        div.addEventListener('touchstart', event => {
-          const touch = event.touches[0];
-          div.classList.add('dragging');
-          div.style.position = 'absolute';
-          div.style.left = `${touch.pageX - div.offsetWidth / 2}px`;
-          div.style.top  = `${touch.pageY - div.offsetHeight / 2}px`;
-          event.preventDefault();
-        });
+        
+        // Pointer-Events zur Unterstützung von Maus und Touch
+        div.addEventListener('pointerdown', pointerDownHandler);
       });
     }
-
-    // Globaler Touch-Move-Listener (wird nur aktiv, wenn ein Element "dragging" ist)
-    document.addEventListener('touchmove', event => {
-      const dragged = document.querySelector('.dragging');
-      if (!dragged) return;
-      const touch = event.touches[0];
-      dragged.style.left = `${touch.pageX - dragged.offsetWidth / 2}px`;
-      dragged.style.top  = `${touch.pageY - dragged.offsetHeight / 2}px`;
-    });
-
-    // Globaler Touch-End-Listener: Ermittelt, ob das Element in eine Drop-Zone abgelegt wurde.
-    document.addEventListener('touchend', event => {
-      const dragged = document.querySelector('.dragging');
-      if (!dragged) return;
-      // Kurzer Timeout, damit sich das DOM stabilisiert
-      setTimeout(() => {
-        const touch = event.changedTouches[0];
-        // Versuche, mithilfe von closest() die Drop-Zone zu ermitteln
-        let dropElem = null;
-        const elemAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
-        if (elemAtPoint) {
-          dropElem = elemAtPoint.closest('.drop-zone');
-        }
-        if (dropElem && dragged.dataset.match === dropElem.dataset.match) {
-          dropElem.textContent = dragged.textContent;
-          dropElem.classList.add('correct');
-          dragged.classList.add('hidden');
-          checkCompletion();
-        }
-        // Rücksetzen
-        dragged.classList.remove('dragging');
-        dragged.style.position = '';
-        dragged.style.left = '';
-        dragged.style.top = '';
-      }, 50);
-    });
-
-    // Shuffle-Funktion (Fisher-Yates)
+    
+    // Variablen zum Speichern des aktiven Draggables
+    let activeElem = null;
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    function pointerDownHandler(e) {
+      // Nur mit linker Maustaste oder Touch
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      activeElem = e.currentTarget;
+      activeElem.setPointerCapture(e.pointerId);
+      activeElem.style.position = 'absolute';
+      // Ermitteln des Offsets zwischen Zeiger und Element
+      const rect = activeElem.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      
+      activeElem.classList.add('dragging');
+      
+      activeElem.addEventListener('pointermove', pointerMoveHandler);
+      activeElem.addEventListener('pointerup', pointerUpHandler);
+      activeElem.addEventListener('pointercancel', pointerUpHandler);
+    }
+    
+    function pointerMoveHandler(e) {
+      if (!activeElem) return;
+      activeElem.style.left = `${e.clientX - offsetX}px`;
+      activeElem.style.top  = `${e.clientY - offsetY}px`;
+    }
+    
+    function pointerUpHandler(e) {
+      if (!activeElem) return;
+      activeElem.releasePointerCapture(e.pointerId);
+      activeElem.removeEventListener('pointermove', pointerMoveHandler);
+      activeElem.removeEventListener('pointerup', pointerUpHandler);
+      activeElem.removeEventListener('pointercancel', pointerUpHandler);
+      
+      // Ermitteln des Elements unter dem Endpunkt
+      const dropElem = document.elementFromPoint(e.clientX, e.clientY)?.closest('.drop-zone');
+      if (dropElem && activeElem.dataset.match === dropElem.dataset.match) {
+        dropElem.textContent = activeElem.textContent;
+        dropElem.classList.add('correct');
+        activeElem.classList.add('hidden');
+        checkCompletion();
+      }
+      
+      activeElem.classList.remove('dragging');
+      activeElem.style.position = '';
+      activeElem.style.left = '';
+      activeElem.style.top = '';
+      activeElem = null;
+    }
+    
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
       }
     }
-
-    // Überprüft, ob alle Drop-Zonen korrekt gefüllt sind.
-    // Wenn ja, wird nach einer kurzen Pause das nächste Verb geladen.
+    
     function checkCompletion() {
       const dropZones = document.querySelectorAll('.drop-zone');
       let allCorrect = true;
@@ -298,8 +271,7 @@
         }, 1000);
       }
     }
-
-    // Spielstart mit dem ersten Verb
+    
     loadVerb(currentVerbIndex);
   </script>
 </body>
