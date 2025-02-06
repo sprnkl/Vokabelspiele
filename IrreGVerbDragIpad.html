@@ -34,7 +34,7 @@
       text-align: center;
       min-width: 80px;
       border: 1px solid #ccc;
-      /* Deaktiviert die native Touch-Geste (z. B. Scrollen) auf dem Element */
+      /* Verhindert natives Scrollen/Zoom bei Touch */
       touch-action: none;
     }
     .hidden {
@@ -142,6 +142,9 @@
 
     let currentVerbIndex = 0;
 
+    // Mische die Reihenfolge der Verben einmalig vor Spielstart
+    shuffle(verbs);
+
     // Lädt ein Verb (alle seine Formen) in die Spieloberfläche
     function loadVerb(index) {
       if (index >= verbs.length) {
@@ -229,7 +232,6 @@
           div.style.position = 'absolute';
           div.style.left = `${touch.pageX - div.offsetWidth / 2}px`;
           div.style.top  = `${touch.pageY - div.offsetHeight / 2}px`;
-          // Verhindere, dass der Browser hier versucht zu scrollen
           event.preventDefault();
         });
       });
@@ -244,21 +246,35 @@
       dragged.style.top  = `${touch.pageY - dragged.offsetHeight / 2}px`;
     });
 
-    // Globaler Touch-End-Listener: Ermittelt per document.elementFromPoint, ob der Drop erfolgt ist
+    // Globaler Touch-End-Listener: Ermittelt, ob das Element in eine Drop-Zone abgelegt wurde.
     document.addEventListener('touchend', event => {
       const dragged = document.querySelector('.dragging');
       if (!dragged) return;
       const touch = event.changedTouches[0];
-      const dropElem = document.elementFromPoint(touch.clientX, touch.clientY);
-      if (dropElem && dropElem.classList.contains('drop-zone')) {
-        if (dragged.dataset.match === dropElem.dataset.match) {
-          dropElem.textContent = dragged.textContent;
-          dropElem.classList.add('correct');
-          dragged.classList.add('hidden');
-          checkCompletion();
+      
+      // Prüfe alle Drop-Zonen, ob der Touch-End-Punkt in einem von ihnen liegt
+      let dropElem = null;
+      const dropZones = document.querySelectorAll('.drop-zone');
+      dropZones.forEach(zone => {
+        const rect = zone.getBoundingClientRect();
+        if (
+          touch.clientX >= rect.left &&
+          touch.clientX <= rect.right &&
+          touch.clientY >= rect.top &&
+          touch.clientY <= rect.bottom
+        ) {
+          dropElem = zone;
         }
+      });
+
+      if (dropElem && dragged.dataset.match === dropElem.dataset.match) {
+        dropElem.textContent = dragged.textContent;
+        dropElem.classList.add('correct');
+        dragged.classList.add('hidden');
+        checkCompletion();
       }
-      // Entferne die Dragging-Klasse und setze die Position zurück
+
+      // Entferne die "dragging"-Klasse und setze die Position zurück
       dragged.classList.remove('dragging');
       dragged.style.position = '';
       dragged.style.left = '';
