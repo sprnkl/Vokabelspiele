@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unregelmäßige Verben Drag & Drop</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #f5f5f5;
+      margin: 0;
+      height: 100vh;
+    }
+    h1 {
+      color: #333;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 800px;
+    }
+    .verb {
+      background-color: #ffdd57;
+      padding: 10px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: grab;
+      text-align: center;
+      width: 120px;
+    }
+    .drop-zone {
+      border: 2px dashed #aaa;
+      border-radius: 5px;
+      margin: 10px;
+      padding: 15px;
+      min-width: 150px;
+      text-align: center;
+    }
+    .hidden {
+      display: none;
+    }
+    .correct {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .timer {
+      margin-top: 20px;
+    }
+    .points {
+      margin-top: 10px;
+    }
+    .button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Unregelmäßige Verben: Drag & Drop</h1>
+  <div id="game" class="container"></div>
+  <div class="points">Punkte: <span id="points">0</span></div>
+  <div class="timer">Zeit: <span id="time">0</span> Sekunden</div>
+  <button class="button" id="restart">Noch mal spielen</button>
+
+  <script>
+    const verbsData = [
+      { infinitive: "be", pastSimple: "was/were", pastParticiple: "been", meaning: "sein" },
+      { infinitive: "begin", pastSimple: "began", pastParticiple: "begun", meaning: "beginnen, anfangen" },
+      { infinitive: "break", pastSimple: "broke", pastParticiple: "broken", meaning: "brechen, zerbrechen" },
+      { infinitive: "bring", pastSimple: "brought", pastParticiple: "brought", meaning: "bringen, mitbringen" },
+      { infinitive: "buy", pastSimple: "bought", pastParticiple: "bought", meaning: "kaufen" },
+      { infinitive: "catch", pastSimple: "caught", pastParticiple: "caught", meaning: "fangen, erwischen" },
+      { infinitive: "come", pastSimple: "came", pastParticiple: "come", meaning: "kommen" },
+      { infinitive: "cost", pastSimple: "cost", pastParticiple: "cost", meaning: "kosten" },
+      { infinitive: "cut", pastSimple: "cut", pastParticiple: "cut", meaning: "schneiden, mähen" },
+      { infinitive: "do", pastSimple: "did", pastParticiple: "done", meaning: "tun, machen" },
+      { infinitive: "drink", pastSimple: "drank", pastParticiple: "drunk", meaning: "trinken" },
+      { infinitive: "drive", pastSimple: "drove", pastParticiple: "driven", meaning: "(Auto) fahren, antreiben" },
+      { infinitive: "eat", pastSimple: "ate", pastParticiple: "eaten", meaning: "essen" },
+      { infinitive: "fall", pastSimple: "fell", pastParticiple: "fallen", meaning: "fallen, hinfallen" },
+      { infinitive: "feel", pastSimple: "felt", pastParticiple: "felt", meaning: "fühlen" },
+      { infinitive: "find", pastSimple: "found", pastParticiple: "found", meaning: "finden" },
+      { infinitive: "fly", pastSimple: "flew", pastParticiple: "flown", meaning: "fliegen" },
+      { infinitive: "forget", pastSimple: "forgot", pastParticiple: "forgotten", meaning: "vergessen" },
+      { infinitive: "get", pastSimple: "got", pastParticiple: "got/gotten", meaning: "bekommen, holen" },
+      { infinitive: "give", pastSimple: "gave", pastParticiple: "given", meaning: "geben" },
+      { infinitive: "go", pastSimple: "went", pastParticiple: "gone", meaning: "gehen" },
+      { infinitive: "have", pastSimple: "had", pastParticiple: "had", meaning: "haben" },
+      { infinitive: "hear", pastSimple: "heard", pastParticiple: "heard", meaning: "hören" },
+      { infinitive: "hurt", pastSimple: "hurt", pastParticiple: "hurt", meaning: "verletzen, wehtun" },
+      { infinitive: "keep", pastSimple: "kept", pastParticiple: "kept", meaning: "behalten" },
+      { infinitive: "know", pastSimple: "knew", pastParticiple: "known", meaning: "wissen, kennen" },
+      { infinitive: "leave", pastSimple: "left", pastParticiple: "left", meaning: "abfahren, weggehen" },
+      { infinitive: "lose", pastSimple: "lost", pastParticiple: "lost", meaning: "verlieren" },
+      { infinitive: "make", pastSimple: "made", pastParticiple: "made", meaning: "machen" },
+      { infinitive: "mean", pastSimple: "meant", pastParticiple: "meant", meaning: "bedeuten, meinen" },
+      { infinitive: "meet", pastSimple: "met", pastParticiple: "met", meaning: "treffen, kennenlernen" },
+      { infinitive: "pay", pastSimple: "paid", pastParticiple: "paid", meaning: "bezahlen" },
+      { infinitive: "put", pastSimple: "put", pastParticiple: "put", meaning: "setzen, legen" },
+      { infinitive: "read", pastSimple: "read", pastParticiple: "read", meaning: "lesen" },
+      { infinitive: "ride", pastSimple: "rode", pastParticiple: "ridden", meaning: "reiten, fahren" },
+      { infinitive: "ring", pastSimple: "rang", pastParticiple: "rung", meaning: "läuten, anrufen" },
+      { infinitive: "run", pastSimple: "ran", pastParticiple: "run", meaning: "rennen, laufen" },
+      { infinitive: "say", pastSimple: "said", pastParticiple: "said", meaning: "sagen" },
+      { infinitive: "see", pastSimple: "saw", pastParticiple: "seen", meaning: "sehen" },
+      { infinitive: "sell", pastSimple: "sold", pastParticiple: "sold", meaning: "verkaufen" },
+      { infinitive: "send", pastSimple: "sent", pastParticiple: "sent", meaning: "schicken" },
+      { infinitive: "sing", pastSimple: "sang", pastParticiple: "sung", meaning: "singen" },
+      { infinitive: "sit", pastSimple: "sat", pastParticiple: "sat", meaning: "sitzen" },
+      { infinitive: "sleep", pastSimple: "slept", pastParticiple: "slept", meaning: "schlafen" },
+      { infinitive: "speak", pastSimple: "spoke", pastParticiple: "spoken", meaning: "sprechen" },
+      { infinitive: "spend", pastSimple: "spent", pastParticiple: "spent", meaning: "ausgeben, verbringen" },
+      { infinitive: "stand", pastSimple: "stood", pastParticiple: "stood", meaning: "stehen" },
+      { infinitive: "take", pastSimple: "took", pastParticiple: "taken", meaning: "nehmen" },
+      { infinitive: "teach", pastSimple: "taught", pastParticiple: "taught", meaning: "unterrichten" },
+      { infinitive: "tell", pastSimple: "told", pastParticiple: "told", meaning: "erzählen" },
+      { infinitive: "think", pastSimple: "thought", pastParticiple: "thought", meaning: "denken" },
+      { infinitive: "throw", pastSimple: "threw", pastParticiple: "thrown", meaning: "werfen" },
+      { infinitive: "understand", pastSimple: "understood", pastParticiple: "understood", meaning: "verstehen" },
+      { infinitive: "wear", pastSimple: "wore", pastParticiple: "worn", meaning: "tragen, anhaben" },
+      { infinitive: "win", pastSimple: "won", pastParticiple: "won", meaning: "gewinnen" },
+      { infinitive: "write", pastSimple: "wrote", pastParticiple: "written", meaning: "schreiben" }
+    ];
+
+    const gameContainer = document.getElementById('game');
+    const pointsDisplay = document.getElementById('points');
+    const timeDisplay = document.getElementById('time');
+    const restartButton = document.getElementById('restart');
+
+    let points = 0;
+    let time = 0;
+    let timer;
+    let draggedElement = null;
+
+    function startTimer() {
+      timer = setInterval(() => {
+        time++;
+        timeDisplay.textContent = time;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timer);
+    }
+
+    function createGame() {
+      gameContainer.innerHTML = '';
+      points = 0;
+      time = 0;
+      pointsDisplay.textContent = points;
+      timeDisplay.textContent = time;
+
+      const selectedVerb = verbsData[Math.floor(Math.random() * verbsData.length)];
+
+      const verbsToDrag = [
+        { text: selectedVerb.infinitive, match: 'infinitive' },
+        { text: selectedVerb.pastSimple, match: 'pastSimple' },
+        { text: selectedVerb.pastParticiple, match: 'pastParticiple' },
+        { text: selectedVerb.meaning, match: 'meaning' }
+      ];
+
+      const dropZonesData = [
+        { label: 'Infinitive', match: 'infinitive' },
+        { label: 'Past Simple', match: 'pastSimple' },
+        { label: 'Past Participle', match: 'pastParticiple' },
+        { label: 'Meaning', match: 'meaning' }
+      ];
+
+      // Zufällige Reihenfolge der draggable Items
+      verbsToDrag.sort(() => Math.random() - 0.5);
+
+      // Erstelle die draggable Elemente
+      verbsToDrag.forEach(item => {
+        const div = document.createElement('div');
+        div.classList.add('verb');
+        div.textContent = item.text;
+        div.setAttribute('draggable', 'true');
+        div.dataset.match = item.match;
+        gameContainer.appendChild(div);
+
+        // Desktop-Events
+        div.addEventListener('dragstart', function(e) {
+          draggedElement = this;
+          this.classList.add('dragging');
+        });
+        div.addEventListener('dragend', function(e) {
+          this.classList.remove('dragging');
+          draggedElement = null;
+        });
+
+        // Touch-Events für mobile Geräte
+        div.addEventListener('touchstart', function(e) {
+          e.preventDefault(); // Verhindert Scrollen
+          draggedElement = this;
+          this.classList.add('dragging');
+        });
+        div.addEventListener('touchmove', function(e) {
+          e.preventDefault(); // Damit die Seite nicht scrollt
+          // Optional: Hier könnte man das Element visuell dem Finger folgen lassen
+        });
+        div.addEventListener('touchend', function(e) {
+          e.preventDefault();
+          this.classList.remove('dragging');
+          const touch = e.changedTouches[0];
+          let dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+          // Gehe im DOM nach oben, falls das Ziel nicht direkt eine Drop-Zone ist
+          while (dropTarget && !dropTarget.classList.contains('drop-zone')) {
+            dropTarget = dropTarget.parentElement;
+          }
+          if (dropTarget && draggedElement && draggedElement.dataset.match === dropTarget.dataset.match) {
+            dropTarget.classList.add('correct');
+            dropTarget.textContent = draggedElement.textContent;
+            draggedElement.classList.add('hidden');
+            points++;
+            pointsDisplay.textContent = points;
+            if (points === 4) {
+              stopTimer();
+              alert(`Geschafft! Du hast ${time} Sekunden gebraucht.`);
+            }
+          }
+          draggedElement = null;
+        });
+      });
+
+      // Erstelle die Drop-Zonen
+      dropZonesData.forEach(zone => {
+        const div = document.createElement('div');
+        div.classList.add('drop-zone');
+        div.dataset.match = zone.match;
+        div.textContent = zone.label;
+        gameContainer.appendChild(div);
+
+        // Desktop Drop-Events
+        div.addEventListener('dragover', function(e) {
+          e.preventDefault();
+        });
+        div.addEventListener('drop', function(e) {
+          e.preventDefault();
+          if (draggedElement && draggedElement.dataset.match === this.dataset.match) {
+            this.classList.add('correct');
+            this.textContent = draggedElement.textContent;
+            draggedElement.classList.add('hidden');
+            points++;
+            pointsDisplay.textContent = points;
+            if (points === 4) {
+              stopTimer();
+              alert(`Geschafft! Du hast ${time} Sekunden gebraucht.`);
+            }
+          }
+        });
+      });
+    }
+
+    restartButton.addEventListener('click', function() {
+      stopTimer();
+      time = 0;
+      points = 0;
+      pointsDisplay.textContent = points;
+      timeDisplay.textContent = time;
+      startTimer();
+      createGame();
+    });
+
+    startTimer();
+    createGame();
+  </script>
+</body>
+</html>
