@@ -1,66 +1,120 @@
-document.querySelectorAll('.verb').forEach((verb) => {
-    // Für Maus-Drag-&-Drop
-    verb.addEventListener('dragstart', (event) => {
-        event.dataTransfer.setData('text/plain', ''); // Für Desktop-Browser
-        verb.classList.add('dragging');
-    });
-
-    verb.addEventListener('dragend', () => {
-        verb.classList.remove('dragging');
-    });
-
-    // Für Touch-Drag-&-Drop
-    verb.addEventListener('touchstart', (event) => {
-        const touch = event.touches[0];
-        verb.classList.add('dragging');
-        verb.style.position = 'absolute';
-        verb.style.left = `${touch.pageX - verb.offsetWidth / 2}px`;
-        verb.style.top = `${touch.pageY - verb.offsetHeight / 2}px`;
-    });
-
-    document.addEventListener('touchmove', (event) => {
-        const dragged = document.querySelector('.dragging');
-        if (!dragged) return;
-
-        const touch = event.touches[0];
-        dragged.style.left = `${touch.pageX - dragged.offsetWidth / 2}px`;
-        dragged.style.top = `${touch.pageY - dragged.offsetHeight / 2}px`;
-    });
-
-    document.addEventListener('touchend', () => {
-        const dragged = document.querySelector('.dragging');
-        if (dragged) {
-            dragged.classList.remove('dragging');
-            dragged.style.position = '';
-            dragged.style.left = '';
-            dragged.style.top = '';
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vokabelspiel</title>
+    <style>
+        /* Dein CSS-Stil hier */
+        .verb {
+            background-color: #ffdd57;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: grab;
+            text-align: center;
+            width: 120px;
         }
-    });
-});
-
-document.querySelectorAll('.drop-zone').forEach((zone) => {
-    // Für Maus-Drag-&-Drop
-    zone.addEventListener('dragover', (event) => {
-        event.preventDefault();
-    });
-
-    zone.addEventListener('drop', (event) => {
-        event.preventDefault();
-        const dragged = document.querySelector('.dragging');
-        if (dragged && dragged.dataset.match === zone.dataset.match) {
-            zone.textContent = dragged.textContent;
-            zone.classList.add('correct');
-            dragged.classList.add('hidden');
+        .drop-zone {
+            border: 2px dashed #aaa;
+            padding: 15px;
+            min-width: 150px;
+            text-align: center;
         }
-    });
-
-    // Für Touch-Drag-&-Drop
-    zone.addEventListener('touchend', () => {
-        const dragged = document.querySelector('.dragging');
-        if (dragged && dragged.dataset.match === zone.dataset.match) {
-            zone.textContent = dragged.textContent;
-            zone.classList.add('correct');
-            dragged.classList.add('hidden');
+        .dragging {
+            opacity: 0.5;
         }
-    });
-});
+        .hidden {
+            display: none;
+        }
+        .correct {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vokabelspiel: Drag & Drop</h1>
+    <div id="game" class="container">
+        <div class="verb" data-match="infinitive">be</div>
+        <div class="verb" data-match="pastSimple">was/were</div>
+        <div class="verb" data-match="pastParticiple">been</div>
+        <div class="verb" data-match="meaning">sein</div>
+
+        <div class="drop-zone" data-match="infinitive">Infinitive</div>
+        <div class="drop-zone" data-match="pastSimple">Past Simple</div>
+        <div class="drop-zone" data-match="pastParticiple">Past Participle</div>
+        <div class="drop-zone" data-match="meaning">Meaning</div>
+    </div>
+
+    <script>
+        // JavaScript-Code mit Touch-Unterstützung
+        document.querySelectorAll('.verb').forEach((verb) => {
+            // Für Maus-Drag-&-Drop
+            verb.addEventListener('dragstart', (event) => {
+                event.dataTransfer.setData('text/plain', '');
+                verb.classList.add('dragging');
+            });
+
+            verb.addEventListener('dragend', () => {
+                verb.classList.remove('dragging');
+            });
+
+            // Für Touch-Drag-&-Drop
+            verb.addEventListener('touchstart', (event) => {
+                const touch = event.touches[0];
+                verb.classList.add('dragging');
+                verb.style.position = 'absolute';
+                verb.style.left = `${touch.pageX - verb.offsetWidth / 2}px`;
+                verb.style.top = `${touch.pageY - verb.offsetHeight / 2}px`;
+            });
+
+            document.addEventListener('touchmove', (event) => {
+                const dragged = document.querySelector('.dragging');
+                if (!dragged) return;
+
+                const touch = event.touches[0];
+                dragged.style.left = `${touch.pageX - dragged.offsetWidth / 2}px`;
+                dragged.style.top = `${touch.pageY - dragged.offsetHeight / 2}px`;
+            });
+
+            document.addEventListener('touchend', () => {
+                const dragged = document.querySelector('.dragging');
+                if (dragged) {
+                    dragged.classList.remove('dragging');
+                    dragged.style.position = '';
+                    dragged.style.left = '';
+                    dragged.style.top = '';
+                }
+            });
+        });
+
+        document.querySelectorAll('.drop-zone').forEach((zone) => {
+            // Für Maus-Drag-&-Drop
+            zone.addEventListener('dragover', (event) => {
+                event.preventDefault();
+            });
+
+            zone.addEventListener('drop', (event) => {
+                event.preventDefault();
+                const dragged = document.querySelector('.dragging');
+                if (dragged && dragged.dataset.match === zone.dataset.match) {
+                    zone.textContent = dragged.textContent;
+                    zone.classList.add('correct');
+                    dragged.classList.add('hidden');
+                }
+            });
+
+            // Für Touch-Drag-&-Drop
+            zone.addEventListener('touchend', () => {
+                const dragged = document.querySelector('.dragging');
+                if (dragged && dragged.dataset.match === zone.dataset.match) {
+                    zone.textContent = dragged.textContent;
+                    zone.classList.add('correct');
+                    dragged.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
